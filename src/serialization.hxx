@@ -62,7 +62,7 @@ BOOST_FUSION_DEFINE_STRUCT ((shared_class), CreateGameLobbyError, (std::string, 
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), JoinGameLobby, (std::string, name) (std::string, password))
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), JoinGameLobbySuccess, )
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), JoinGameLobbyError, (std::string, name) (std::string, error))
-BOOST_FUSION_DEFINE_STRUCT ((shared_class), GameOption, ) // TODO add your game options here
+BOOST_FUSION_DEFINE_STRUCT ((shared_class), GameOption, ) // TODO-TEMPLATE add your game options here
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), GameOptionError, (std::string, error))
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), UserInGameLobby, (std::string, accountName))
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), UsersInGameLobby, (std::string, name) (std::vector<shared_class::UserInGameLobby>, users) (size_t, maxUserSize) (shared_class::GameOption, durakGameOption))
@@ -112,70 +112,28 @@ BOOST_FUSION_DEFINE_STRUCT ((shared_class), RatingChanged, (size_t, oldRating) (
 
 // clang-format off
 namespace shared_class{
+    // TODO-TEMPLATE add new type to handle in server for the server here
 static boost::hana::tuple<
 JoinChannel,
-JoinChannelSuccess,
-JoinChannelError,
 CreateAccount,
-CreateAccountSuccess,
-CreateAccountError,
 LoginAccount,
-LoginAccountSuccess,
-LoginAccountError,
 BroadCastMessage,
-BroadCastMessageSuccess,
-BroadCastMessageError,
 LeaveChannel,
-LeaveChannelSuccess,
-LeaveChannelError,
-Message,
 LogoutAccount,
-LogoutAccountSuccess,
-LogoutAccountError,
 CreateGameLobby,
-CreateGameLobbySuccess,
-CreateGameLobbyError,
 JoinGameLobby,
-JoinGameLobbySuccess,
-JoinGameLobbyError,
-UserInGameLobby,
-UsersInGameLobby,
 SetMaxUserSizeInCreateGameLobby,
-MaxUserSizeInCreateGameLobby,
-SetMaxUserSizeInCreateGameLobbyError,
 GameOption,
-GameOptionError,
 LeaveGame,
-LeaveGameSuccess,
-LeaveGameError,
 LeaveGameLobby,
-LeaveGameLobbySuccess,
-LeaveGameLobbyError,
-WantToRelog,
 RelogTo,
-RelogToError,
-RelogToCreateGameLobbySuccess,
-RelogToGameSuccess,
 CreateAccountCancel,
 LoginAccountCancel,
 CreateGame,
-StartGame,
-CreateGameError,
-AskIfUserWantsToJoinGame,
-GameStartCanceled,
 WantsToJoinGame,
-WantsToJoinGameError,
-AskIfUserWantsToJoinGameTimeOut,
-GameStartCanceledRemovedFromQueue,
 LeaveQuickGameQueue,
-LeaveQuickGameQueueSuccess,
-LeaveQuickGameQueueError,
 LoginAsGuest,
-LoginAsGuestSuccess,
-JoinMatchMakingQueue,
-JoinMatchMakingQueueSuccess,
-JoinMatchMakingQueueError,
-RatingChanged
+JoinMatchMakingQueue
   >  const sharedClasses{};
 }
 // clang-format on

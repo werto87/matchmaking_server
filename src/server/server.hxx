@@ -2,8 +2,8 @@
 #define AD140436_3FBA_4D63_8C0E_9113B92859E0
 
 #include "../database/database.hxx"
-#include "gameLobby.hxx"
 #include "../game/game.hxx"
+#include "gameLobby.hxx"
 #include "user.hxx"
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
@@ -20,7 +20,6 @@
 
 typedef boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> SSLWebsocket;
 
-// TODO add concept which checks if game has correct functions
 class Server
 {
 public:

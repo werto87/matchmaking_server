@@ -2,18 +2,18 @@
 #include "pipes/pipes.hpp"
 void Game::relogUser (std::shared_ptr<User>)
 {
-  // TODO add logic here
+  // TODO-TEMPLATE add logic here
 }
 
 void Game::removeUser (std::shared_ptr<User>)
 {
-  // TODO add logic here
+  // TODO-TEMPLATE add logic here
 }
 
 std::vector<std::shared_ptr<User>>
 Game::getWinners () const
 {
-  // TODO add logic here
+  // TODO-TEMPLATE add logic here
   return {};
 }
 

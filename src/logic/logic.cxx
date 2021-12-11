@@ -68,6 +68,8 @@ handleMessage (std::string const &msg, boost::asio::io_context &io_context, boos
   boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
   if (splitMesssage.size () == 2)
     {
+      // TODO-TEMPLATE to add a new type to handle here put it in sharedClasses it is in src/serialization.hxx
+      // TODO-TEMPLATE add new which should be handled by the server here in this if
       auto const &typeToSearch = splitMesssage.at (0);
       auto const &objectAsString = splitMesssage.at (1);
       if (typeToSearch == "CreateAccount")

@@ -7,7 +7,7 @@
 auto const hash_memory = crypto_pwhash_argon2id_MEMLIMIT_MIN;
 auto const hash_opt = crypto_pwhash_argon2id_OPSLIMIT_MIN;
 #else
-// TODO if we get some fast server and save some important data increase this
+// TODO-TEMPLATE increase opt and memory so it take longer to get the clear passwords if an attacker steals the hashed passwords
 // this will slow down login and create account but give security if the database gets stolen
 auto const hash_memory = crypto_pwhash_argon2id_MEMLIMIT_MIN;
 auto const hash_opt = crypto_pwhash_argon2id_OPSLIMIT_MIN;

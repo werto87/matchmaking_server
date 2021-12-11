@@ -1,7 +1,7 @@
 #ifndef DBE82937_D6AB_4777_A3C8_A62B68300AA3
 #define DBE82937_D6AB_4777_A3C8_A62B68300AA3
 
-#include "durak/gameOption.hxx"
+#include "src/serialization.hxx"
 #include "user.hxx"
 #include <cstddef>
 #include <list>
@@ -9,6 +9,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+
 struct GameLobby
 {
 
@@ -41,8 +42,7 @@ struct GameLobby
   bool getWaitingForAnswerToStartGame () const;
 
   std::vector<std::shared_ptr<User>> _users{};
-  // TODO template game option so user can use his own game option
-  durak::GameOption gameOption{};
+  shared_class::GameOption gameOption{};
   std::vector<std::shared_ptr<User>> readyUsers{};
   LobbyType lobbyAdminType = LobbyType::FirstUserInLobbyUsers;
   std::optional<std::string> name{};

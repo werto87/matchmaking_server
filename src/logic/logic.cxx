@@ -28,11 +28,7 @@
 #include <crypt.h>
 #include <cstddef>
 #include <cstdlib>
-#include <durak/game.hxx>
-#include <durak/gameData.hxx>
-#include <durak/gameOption.hxx>
 #include <fmt/core.h>
-#include <game_01_shared_class/serialization.hxx>
 #include <iostream>
 #include <iterator>
 #include <numeric>
@@ -368,30 +364,10 @@ leaveChannel (std::string const &objectAsString, std::shared_ptr<User> user)
 }
 
 std::optional<shared_class::GameOptionError>
-errorInGameOption (durak::GameOption const &gameOption)
+errorInGameOption (shared_class::GameOption const &)
 {
-  if (gameOption.customCardDeck)
-    {
-      if (gameOption.customCardDeck->empty ())
-        {
-          return shared_class::GameOptionError{ "Empty Custom Deck is not allowed" };
-        }
-      else
-        {
-          return std::nullopt;
-        }
-    }
-  else
-    {
-      if (gameOption.maxCardValue < 1)
-        {
-          return shared_class::GameOptionError{ "Max Card Value must be greater than 0" };
-        }
-      else
-        {
-          return std::nullopt;
-        }
-    }
+  // check Game option
+  return std::nullopt;
 }
 
 void
@@ -401,7 +377,7 @@ startGame (std::list<GameLobby>::iterator &gameLobby, std::shared_ptr<User> user
   gameLobby->sendToAllAccountsInGameLobby (objectToStringWithObjectName (shared_class::StartGame{}));
   auto names = std::vector<std::string>{};
   ranges::transform (gameLobby->_users, ranges::back_inserter (names), [] (auto const &tempUser) { return tempUser->accountName.value (); });
-  auto game = durak::Game{ std::move (names), gameLobby->gameOption };
+  // auto game = durak::Game{ std::move (names), gameLobby->gameOption };
   games.emplace_back (gameLobby->_users, gameLobby->lobbyAdminType, [accountName = user->accountName, &games] () {
     if (auto gameWithUser = ranges::find_if (games,
                                              [accountName] (auto const &game) {
@@ -616,7 +592,7 @@ setMaxUserSizeInCreateGameLobby (std::string const &objectAsString, std::shared_
 void
 setGameOption (std::string const &objectAsString, std::shared_ptr<User> user, std::list<GameLobby> &gameLobbies)
 {
-  auto gameOption = stringToObject<durak::GameOption> (objectAsString);
+  auto gameOption = stringToObject<shared_class::GameOption> (objectAsString);
   auto accountNameToSearch = user->accountName.value ();
   if (auto gameLobbyWithAccount = ranges::find_if (gameLobbies,
                                                    [accountName = user->accountName] (auto const &gameLobby) {
@@ -784,10 +760,11 @@ leaveGame (std::shared_ptr<User> user, std::list<Game> &games)
   if (auto game = ranges::find_if (games, [accountName = user->accountName.value ()] (Game const &_game) { return ranges::find_if (_game.users, [&accountName] (std::shared_ptr<User> const &user) { return user->accountName.value () == accountName; }) != _game.users.end (); }); game != games.end ())
     {
       game->removeUser (user);
+      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveGameSuccess{}));
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::DurakLeaveGameError{ "Could not find a game for Account Name: " + user->accountName.value () }));
+      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveGameError{ "Could not find a game for Account Name: " + user->accountName.value () }));
     }
 }
 auto constexpr ALLOWED_DIFFERENCE_FOR_RANKED_GAME_MATCHMAKING = size_t{ 100 };

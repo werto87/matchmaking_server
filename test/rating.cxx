@@ -7,8 +7,6 @@
 #include <chrono>
 #include <confu_soci/convenienceFunctionForSoci.hxx>
 #include <cstddef>
-#include <durak/card.hxx>
-#include <durak/game.hxx>
 #include <iterator>
 
 TEST_CASE ("updateRatingWinLose", "[rating]")

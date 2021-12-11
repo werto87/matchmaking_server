@@ -1,5 +1,5 @@
 #include "src/game/game.hxx"
-
+#include "pipes/pipes.hpp"
 void Game::relogUser (std::shared_ptr<User>)
 {
   // TODO add logic here

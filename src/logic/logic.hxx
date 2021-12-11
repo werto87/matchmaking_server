@@ -3,9 +3,9 @@
 #include "../server/gameLobby.hxx"
 #include "../server/user.hxx"
 #include "src/game/game.hxx"
+#include "src/serialization.hxx"
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
-#include <game_01_shared_class/serialization.hxx>
 #include <string>
 #include <vector>
 

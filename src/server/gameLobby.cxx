@@ -1,12 +1,14 @@
-#include "gameLobby.hxx"
-#include "../util.hxx"
+#include "src/server/gameLobby.hxx"
+#include "src/serialization.hxx"
+#include "src/util.hxx"
 #include <algorithm>
 #include <chrono>
-#include <game_01_shared_class/serialization.hxx>
 #include <iterator>
-#include <range/v3/algorithm/any_of.hpp>
-#include <range/v3/algorithm/count_if.hpp>
+#include <range/v3/algorithm.hpp>
+#include <range/v3/iterator/insert_iterators.hpp>
+#include <range/v3/range.hpp>
 #include <stdexcept>
+
 std::optional<std::string>
 GameLobby::setMaxUserCount (size_t userMaxCount)
 {

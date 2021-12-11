@@ -64,9 +64,8 @@ CONAN_PKG::range-v3
 CONAN_PKG::confu_soci
 CONAN_PKG::confu_json
 CONAN_PKG::libsodium
-CONAN_PKG::game_01_shared_class
-CONAN_PKG::sml
 CONAN_PKG::certify
+CONAN_PKG::pipes
 )
 
 ####### create executable

@@ -18,6 +18,20 @@ Game::getWinners () const
 }
 
 void
+updateAccountsOnDatabaseAndSendDataToClient (std::vector<database::Account> const &accountsBeforeUpdate, std::vector<database::Account> const &accountsAfterUpdate, std::vector<std::shared_ptr<User>> users)
+{
+  soci::session sql (soci::sqlite3, databaseName);
+  for (size_t i = 0; i < accountsBeforeUpdate.size (); i++)
+    {
+      confu_soci::upsertStruct (sql, accountsBeforeUpdate.at (i));
+      if (auto user = ranges::find_if (users, [accountName = accountsBeforeUpdate.at (i).accountName] (std::shared_ptr<User> user) { return user->accountName.value () == accountName; }); user != users.end ())
+        {
+          user->get ()->msgQueue.push_back (objectToStringWithObjectName (shared_class::RatingChanged{ accountsAfterUpdate.at (i).rating, accountsBeforeUpdate.at (i).rating }));
+        }
+    }
+}
+
+void
 Game::gameOverChangeRating ()
 {
   auto winners = getWinners ();
@@ -27,15 +41,7 @@ Game::gameOverChangeRating ()
       soci::session sql (soci::sqlite3, databaseName);
       users >>= pipes::transform ([&sql] (auto const &user) { return confu_soci::findStruct<database::Account> (sql, "accountName", user->accountName.value ()).value (); }) >>= pipes::push_back (accounts);
       auto updatedAccounts = calcRatingDraw (accounts);
-      for (size_t i = 0; i < updatedAccounts.size (); i++)
-        //   TODO replace with function this is the same as the other for loops part1/3
-        {
-          confu_soci::upsertStruct (sql, updatedAccounts.at (i));
-          if (auto user = ranges::find_if (users, [accountName = updatedAccounts.at (i).accountName] (std::shared_ptr<User> user) { return user->accountName.value () == accountName; }); user != users.end ())
-            {
-              user->get ()->msgQueue.push_back (objectToStringWithObjectName (shared_class::RatingChanged{ accounts.at (i).rating, updatedAccounts.at (i).rating }));
-            }
-        }
+      updateAccountsOnDatabaseAndSendDataToClient (accounts, updatedAccounts, users);
     }
   else
     {
@@ -44,23 +50,7 @@ Game::gameOverChangeRating ()
       auto loserAccounts = std::vector<database::Account>{};
       users >>= pipes::transform ([&sql] (auto const &user) { return confu_soci::findStruct<database::Account> (sql, "accountName", user->accountName.value ()).value (); }) >>= pipes::partition ([&winners] (database::Account const &account) { return ranges::find_if (winners, [accountName = account.accountName] (std::shared_ptr<User> user) { return user->accountName == accountName; }) != winners.end (); }, pipes::push_back (winnerAccounts), pipes::push_back (loserAccounts));
       auto [updatedLoserAccounts, updatedWinnerAccounts] = calcRatingLoserAndWinner (loserAccounts, winnerAccounts);
-      for (size_t i = 0; i < updatedLoserAccounts.size (); i++)
-        {
-          //   TODO replace with function this is the same as the other for loops part2/3
-          confu_soci::upsertStruct (sql, updatedLoserAccounts.at (i));
-          if (auto user = ranges::find_if (users, [accountName = updatedLoserAccounts.at (i).accountName] (std::shared_ptr<User> user) { return user->accountName.value () == accountName; }); user != users.end ())
-            {
-              user->get ()->msgQueue.push_back (objectToStringWithObjectName (shared_class::RatingChanged{ loserAccounts.at (i).rating, updatedLoserAccounts.at (i).rating }));
-            }
-        }
-      for (size_t i = 0; i < updatedWinnerAccounts.size (); i++)
-        {
-          //   TODO replace with function this is the same as the other for loops part3/3
-          confu_soci::upsertStruct (sql, updatedWinnerAccounts.at (i));
-          if (auto user = ranges::find_if (users, [accountName = updatedWinnerAccounts.at (i).accountName] (std::shared_ptr<User> user) { return user->accountName.value () == accountName; }); user != users.end ())
-            {
-              user->get ()->msgQueue.push_back (objectToStringWithObjectName (shared_class::RatingChanged{ winnerAccounts.at (i).rating, updatedWinnerAccounts.at (i).rating }));
-            }
-        }
+      updateAccountsOnDatabaseAndSendDataToClient (loserAccounts, updatedLoserAccounts, users);
+      updateAccountsOnDatabaseAndSendDataToClient (winnerAccounts, updatedWinnerAccounts, users);
     }
 }

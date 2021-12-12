@@ -379,7 +379,6 @@ startGame (std::list<GameLobby>::iterator &gameLobby, std::shared_ptr<User> user
   gameLobby->sendToAllAccountsInGameLobby (objectToStringWithObjectName (shared_class::StartGame{}));
   auto names = std::vector<std::string>{};
   ranges::transform (gameLobby->_users, ranges::back_inserter (names), [] (auto const &tempUser) { return tempUser->accountName.value (); });
-  // auto game = durak::Game{ std::move (names), gameLobby->gameOption };
   games.emplace_back (gameLobby->_users, gameLobby->lobbyAdminType, [accountName = user->accountName, &games] () {
     if (auto gameWithUser = ranges::find_if (games,
                                              [accountName] (auto const &game) {

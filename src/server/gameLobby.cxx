@@ -156,13 +156,14 @@ runTimer (std::shared_ptr<boost::asio::system_timer> timer, bool &waitingForAnsw
         }
     }
 }
+auto constexpr TIME_TO_ACCEPT_THE_INVITE = std::chrono::seconds{ 10 };
 
 void
 GameLobby::startTimerToAcceptTheInvite (boost::asio::io_context &io_context, std::function<void ()> gameOverCallback)
 {
   waitingForAnswerToStartGame = true;
   _timer = std::make_shared<boost::asio::system_timer> (io_context);
-  _timer->expires_after (std::chrono::seconds{ 10 });
+  _timer->expires_after (TIME_TO_ACCEPT_THE_INVITE);
   co_spawn (
       _timer->get_executor (), [&] () { return runTimer (_timer, waitingForAnswerToStartGame, gameOverCallback); }, boost::asio::detached);
 }

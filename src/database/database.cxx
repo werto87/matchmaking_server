@@ -6,6 +6,7 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <confu_soci/convenienceFunctionForSoci.hxx>
+#include <cstddef>
 #include <filesystem>
 
 namespace database
@@ -20,8 +21,8 @@ createEmptyDatabase ()
       std::filesystem::create_directory ("database");
     }
   using namespace sqlite_api;
-  sqlite3 *db;
-  int rc;
+  sqlite3 *db = nullptr;
+  int rc{};
   rc = sqlite3_open (databaseName.c_str (), &db);
   if (rc)
     {
@@ -39,8 +40,8 @@ createDatabaseIfNotExist ()
     {
       std::filesystem::create_directory ("database");
     }
-  sqlite3 *db;
-  int rc;
+  sqlite3 *db{};
+  int rc{};
   rc = sqlite3_open (databaseName.c_str (), &db);
   if (rc)
     {

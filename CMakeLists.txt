@@ -34,12 +34,12 @@ target_compile_features(${PROJECT_OPTIONS} INTERFACE cxx_std_20)
 # )
 
 
-#include(cmake/Sanitizers.cmake)
-#enable_sanitizers(${PROJECT_OPTIONS})
 
 #allow for static analysis options
 include(cmake/StaticAnalyzers.cmake) 
 
+include(cmake/Sanitizers.cmake)
+enable_sanitizers(${PROJECT_OPTIONS})
  
 ######## conan setup
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -92,8 +92,8 @@ target_compile_definitions(${TARGET_NAME} PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")
 
 
 ####### include what you use
-#find_program(iwyu_path NAMES include-what-you-use iwyu)
-#set_property(TARGET ${TARGET_NAME} PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
+# find_program(iwyu_path NAMES include-what-you-use iwyu)
+# set_property(TARGET ${TARGET_NAME} PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
 
 
 ####### link

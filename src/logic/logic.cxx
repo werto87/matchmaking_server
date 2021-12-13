@@ -164,19 +164,19 @@ handleMessage (std::string const &msg, boost::asio::io_context &io_context, boos
           else
             {
               std::cout << "UnhandledMessage|{\"message\": \"" << msg << "\"}" << std::endl;
-              user->msgQueue.push_back ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
+              user->sendMessageToUser ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
             }
         }
       else
         {
           std::cout << "UnhandledMessage|{\"message\": \"" << msg << "\"}" << std::endl;
-          user->msgQueue.push_back ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
+          user->sendMessageToUser ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
         }
     }
   else
     {
       std::cout << "UnhandledMessage|{\"message\": \"" << msg << "\"}" << std::endl;
-      user->msgQueue.push_back ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
+      user->sendMessageToUser ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
     }
   co_return;
 }
@@ -192,7 +192,7 @@ createAccountAndLogin (std::string objectAsString, boost::asio::io_context &io_c
   soci::session sql (soci::sqlite3, databaseName);
   if (confu_soci::findStruct<database::Account> (sql, "accountName", createAccountObject.accountName))
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateAccountError{ createAccountObject.accountName, "account already created" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateAccountError{ createAccountObject.accountName, "account already created" }));
       co_return;
     }
   else
@@ -200,7 +200,7 @@ createAccountAndLogin (std::string objectAsString, boost::asio::io_context &io_c
       auto hashedPw = co_await async_hash (pool, io_context, createAccountObject.password, boost::asio::use_awaitable);
       if (user->ignoreCreateAccount)
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateAccountError{ createAccountObject.accountName, "Canceled by User Request" }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateAccountError{ createAccountObject.accountName, "Canceled by User Request" }));
           co_return;
         }
       else
@@ -208,12 +208,12 @@ createAccountAndLogin (std::string objectAsString, boost::asio::io_context &io_c
           if (auto account = database::createAccount (createAccountObject.accountName, hashedPw))
             {
               user->accountName = account->accountName;
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LoginAccountSuccess{ createAccountObject.accountName }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::LoginAccountSuccess{ createAccountObject.accountName }));
               co_return;
             }
           else
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateAccountError{ createAccountObject.accountName, "account already created" }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateAccountError{ createAccountObject.accountName, "account already created" }));
               co_return;
             }
         }
@@ -233,7 +233,7 @@ loginAccount (std::string objectAsString, boost::asio::io_context &io_context, s
     {
       if (std::find_if (users.begin (), users.end (), [accountName = account->accountName] (auto const &u) { return accountName == u->accountName; }) != users.end ())
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LoginAccountError{ loginAccountObject.accountName, "Account already logged in" }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::LoginAccountError{ loginAccountObject.accountName, "Account already logged in" }));
           co_return;
         }
       else
@@ -242,7 +242,7 @@ loginAccount (std::string objectAsString, boost::asio::io_context &io_context, s
             {
               if (user->ignoreLogin)
                 {
-                  user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LoginAccountError{ loginAccountObject.accountName, "Canceled by User Request" }));
+                  user->sendMessageToUser (objectToStringWithObjectName (shared_class::LoginAccountError{ loginAccountObject.accountName, "Canceled by User Request" }));
                   co_return;
                 }
               else
@@ -257,7 +257,7 @@ loginAccount (std::string objectAsString, boost::asio::io_context &io_context, s
                     {
                       if (gameLobbyWithUser->lobbyAdminType == GameLobby::LobbyType::FirstUserInLobbyUsers)
                         {
-                          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::WantToRelog{ loginAccountObject.accountName, "Create Game Lobby" }));
+                          user->sendMessageToUser (objectToStringWithObjectName (shared_class::WantToRelog{ loginAccountObject.accountName, "Create Game Lobby" }));
                         }
                       else
                         {
@@ -266,7 +266,7 @@ loginAccount (std::string objectAsString, boost::asio::io_context &io_context, s
                             {
                               gameLobbies.erase (gameLobbyWithUser);
                             }
-                          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LoginAccountSuccess{ loginAccountObject.accountName }));
+                          user->sendMessageToUser (objectToStringWithObjectName (shared_class::LoginAccountSuccess{ loginAccountObject.accountName }));
                         }
                       co_return;
                     }
@@ -278,26 +278,26 @@ loginAccount (std::string objectAsString, boost::asio::io_context &io_context, s
                                                                 });
                            gameWithUser != games.end ())
                     {
-                      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::WantToRelog{ loginAccountObject.accountName, "Back To Game" }));
+                      user->sendMessageToUser (objectToStringWithObjectName (shared_class::WantToRelog{ loginAccountObject.accountName, "Back To Game" }));
                       co_return;
                     }
                   else
                     {
-                      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LoginAccountSuccess{ loginAccountObject.accountName }));
+                      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LoginAccountSuccess{ loginAccountObject.accountName }));
                       co_return;
                     }
                 }
             }
           else
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LoginAccountError{ loginAccountObject.accountName, "Incorrect Username or Password" }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::LoginAccountError{ loginAccountObject.accountName, "Incorrect Username or Password" }));
               co_return;
             }
         }
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LoginAccountError{ loginAccountObject.accountName, "Incorrect username or password" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LoginAccountError{ loginAccountObject.accountName, "Incorrect username or password" }));
       co_return;
     }
 }
@@ -312,7 +312,7 @@ broadCastMessage (std::string const &objectAsString, std::list<std::shared_ptr<U
         {
           soci::session sql (soci::sqlite3, databaseName);
           auto message = shared_class::Message{ sendingUser.accountName.value (), broadCastMessageObject.channel, broadCastMessageObject.message };
-          user->msgQueue.push_back (objectToStringWithObjectName (std::move (message)));
+          user->sendMessageToUser (objectToStringWithObjectName (std::move (message)));
         }
       return;
     }
@@ -330,12 +330,12 @@ joinChannel (std::string const &objectAsString, std::shared_ptr<User> user)
   if (user->accountName)
     {
       user->communicationChannels.insert (joinChannelObject.channel);
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinChannelSuccess{ joinChannelObject.channel }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinChannelSuccess{ joinChannelObject.channel }));
       return;
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinChannelError{ joinChannelObject.channel, { "user not logged in" } }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinChannelError{ joinChannelObject.channel, { "user not logged in" } }));
       return;
     }
 }
@@ -348,18 +348,18 @@ leaveChannel (std::string const &objectAsString, std::shared_ptr<User> user)
     {
       if (user->communicationChannels.erase (leaveChannelObject.channel))
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveChannelSuccess{ leaveChannelObject.channel }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveChannelSuccess{ leaveChannelObject.channel }));
           return;
         }
       else
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveChannelError{ leaveChannelObject.channel, { "channel not found" } }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveChannelError{ leaveChannelObject.channel, { "channel not found" } }));
           return;
         }
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveChannelError{ leaveChannelObject.channel, { "user not logged in" } }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveChannelError{ leaveChannelObject.channel, { "user not logged in" } }));
       return;
     }
 }
@@ -406,7 +406,7 @@ askUsersToJoinGame (std::list<GameLobby>::iterator &gameLobby, std::list<GameLob
     ranges::copy_if (gameLobby->_users, ranges::back_inserter (notReadyUsers), [usersWhichAccepted = gameLobby->readyUsers] (std::shared_ptr<User> const &user) { return ranges::find_if (usersWhichAccepted, [user] (std::shared_ptr<User> const &userWhoAccepted) { return user->accountName.value () == userWhoAccepted->accountName.value (); }) == usersWhichAccepted.end (); });
     for (auto const &notReadyUser : notReadyUsers)
       {
-        notReadyUser->msgQueue.push_back (objectToStringWithObjectName (shared_class::AskIfUserWantsToJoinGameTimeOut{}));
+        notReadyUser->sendMessageToUser (objectToStringWithObjectName (shared_class::AskIfUserWantsToJoinGameTimeOut{}));
         if (gameLobby->lobbyAdminType != GameLobby::LobbyType::FirstUserInLobbyUsers)
           {
             gameLobby->removeUser (notReadyUser);
@@ -436,7 +436,7 @@ createGame (std::shared_ptr<User> user, std::list<GameLobby> &gameLobbies, boost
     {
       if (gameLobbyWithUser->getWaitingForAnswerToStartGame ())
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateGameError{ "It is not allowed to start a game while ask to start a game is running" }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateGameError{ "It is not allowed to start a game while ask to start a game is running" }));
         }
       else
         {
@@ -446,7 +446,7 @@ createGame (std::shared_ptr<User> user, std::list<GameLobby> &gameLobbies, boost
                 {
                   if (auto gameOptionError = errorInGameOption (gameLobbyWithUser->gameOption))
                     {
-                      user->msgQueue.push_back (objectToStringWithObjectName (gameOptionError.value ()));
+                      user->sendMessageToUser (objectToStringWithObjectName (gameOptionError.value ()));
                     }
                   else
                     {
@@ -455,18 +455,18 @@ createGame (std::shared_ptr<User> user, std::list<GameLobby> &gameLobbies, boost
                 }
               else
                 {
-                  user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateGameError{ "You need atleast two user to create a game" }));
+                  user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateGameError{ "You need atleast two user to create a game" }));
                 }
             }
           else
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateGameError{ "you need to be admin in a game lobby to start a game" }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateGameError{ "you need to be admin in a game lobby to start a game" }));
             }
         }
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateGameError{ "Could not find a game lobby for the user" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateGameError{ "Could not find a game lobby for the user" }));
     }
 }
 
@@ -483,7 +483,7 @@ createGameLobby (std::string const &objectAsString, std::shared_ptr<User> user, 
                                                     });
           gameLobbyWithUser != gameLobbies.end ())
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateGameLobbyError{ { "account has already a game lobby with the name: " + gameLobbyWithUser->name.value () } }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateGameLobbyError{ { "account has already a game lobby with the name: " + gameLobbyWithUser->name.value () } }));
           return;
         }
       else
@@ -501,15 +501,15 @@ createGameLobby (std::string const &objectAsString, std::shared_ptr<User> user, 
               usersInGameLobby.name = newGameLobby.name.value ();
               usersInGameLobby.durakGameOption = newGameLobby.gameOption;
               ranges::transform (newGameLobby.accountNames (), ranges::back_inserter (usersInGameLobby.users), [] (auto const &accountName) { return shared_class::UserInGameLobby{ accountName }; });
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinGameLobbySuccess{}));
-              user->msgQueue.push_back (objectToStringWithObjectName (usersInGameLobby));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinGameLobbySuccess{}));
+              user->sendMessageToUser (objectToStringWithObjectName (usersInGameLobby));
               return;
             }
         }
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::CreateGameLobbyError{ { "lobby already exists with name: " + createGameLobbyObject.name } }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateGameLobbyError{ { "lobby already exists with name: " + createGameLobbyObject.name } }));
       return;
     }
 }
@@ -522,12 +522,12 @@ joinGameLobby (std::string const &objectAsString, std::shared_ptr<User> user, st
     {
       if (auto error = gameLobby->tryToAddUser (user))
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinGameLobbyError{ joinGameLobbyObject.name, error.value () }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinGameLobbyError{ joinGameLobbyObject.name, error.value () }));
           return;
         }
       else
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinGameLobbySuccess{}));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinGameLobbySuccess{}));
           auto usersInGameLobby = shared_class::UsersInGameLobby{};
           usersInGameLobby.maxUserSize = gameLobby->maxUserCount ();
           usersInGameLobby.name = gameLobby->name.value ();
@@ -539,7 +539,7 @@ joinGameLobby (std::string const &objectAsString, std::shared_ptr<User> user, st
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinGameLobbyError{ joinGameLobbyObject.name, "wrong password name combination or lobby does not exists" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinGameLobbyError{ joinGameLobbyObject.name, "wrong password name combination or lobby does not exists" }));
       return;
     }
 }
@@ -558,7 +558,7 @@ setMaxUserSizeInCreateGameLobby (std::string const &objectAsString, std::shared_
     {
       if (gameLobbyWithAccount->getWaitingForAnswerToStartGame ())
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::SetMaxUserSizeInCreateGameLobbyError{ "It is not allowed to change lobby while ask to start a game is running" }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::SetMaxUserSizeInCreateGameLobbyError{ "It is not allowed to change lobby while ask to start a game is running" }));
         }
       else
         {
@@ -566,7 +566,7 @@ setMaxUserSizeInCreateGameLobby (std::string const &objectAsString, std::shared_
             {
               if (auto errorMessage = gameLobbyWithAccount->setMaxUserCount (setMaxUserSizeInCreateGameLobbyObject.maxUserSize))
                 {
-                  user->msgQueue.push_back (objectToStringWithObjectName (shared_class::SetMaxUserSizeInCreateGameLobbyError{ errorMessage.value () }));
+                  user->sendMessageToUser (objectToStringWithObjectName (shared_class::SetMaxUserSizeInCreateGameLobbyError{ errorMessage.value () }));
                   return;
                 }
               else
@@ -577,14 +577,14 @@ setMaxUserSizeInCreateGameLobby (std::string const &objectAsString, std::shared_
             }
           else
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::SetMaxUserSizeInCreateGameLobbyError{ "you need to be admin in a game lobby to change the user size" }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::SetMaxUserSizeInCreateGameLobbyError{ "you need to be admin in a game lobby to change the user size" }));
               return;
             }
         }
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::SetMaxUserSizeInCreateGameLobbyError{ "could not find a game lobby for account" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::SetMaxUserSizeInCreateGameLobbyError{ "could not find a game lobby for account" }));
       return;
     }
 }
@@ -603,7 +603,7 @@ setGameOption (std::string const &objectAsString, std::shared_ptr<User> user, st
     {
       if (gameLobbyWithAccount->getWaitingForAnswerToStartGame ())
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::GameOptionError{ "It is not allowed to change game option while ask to start a game is running" }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::GameOptionError{ "It is not allowed to change game option while ask to start a game is running" }));
         }
       else
         {
@@ -615,14 +615,14 @@ setGameOption (std::string const &objectAsString, std::shared_ptr<User> user, st
             }
           else
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::GameOptionError{ "you need to be admin in the create game lobby to change game option" }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::GameOptionError{ "you need to be admin in the create game lobby to change game option" }));
               return;
             }
         }
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::GameOptionError{ "could not find a game lobby for account" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::GameOptionError{ "could not find a game lobby for account" }));
       return;
     }
 }
@@ -653,18 +653,18 @@ leaveGameLobby (std::shared_ptr<User> user, std::list<GameLobby> &gameLobbies)
               ranges::transform (gameLobbyWithAccount->accountNames (), ranges::back_inserter (usersInGameLobby.users), [] (auto const &accountName) { return shared_class::UserInGameLobby{ accountName }; });
               gameLobbyWithAccount->sendToAllAccountsInGameLobby (objectToStringWithObjectName (usersInGameLobby));
             }
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveGameLobbySuccess{}));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveGameLobbySuccess{}));
           return;
         }
       else
         {
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveGameLobbyError{ "not allowed to leave a game lobby which is controlled by the matchmaking system with leave game lobby" }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveGameLobbyError{ "not allowed to leave a game lobby which is controlled by the matchmaking system with leave game lobby" }));
           return;
         }
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveGameLobbyError{ "could not remove user from lobby user not found in lobby" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveGameLobbyError{ "could not remove user from lobby user not found in lobby" }));
       return;
     }
 }
@@ -683,13 +683,13 @@ relogTo (std::string const &objectAsString, std::shared_ptr<User> user, std::lis
       if (relogToObject.wantsToRelog)
         {
           gameLobbyWithAccount->relogUser (user);
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::RelogToCreateGameLobbySuccess{}));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::RelogToCreateGameLobbySuccess{}));
           auto usersInGameLobby = shared_class::UsersInGameLobby{};
           usersInGameLobby.maxUserSize = gameLobbyWithAccount->maxUserCount ();
           usersInGameLobby.name = gameLobbyWithAccount->name.value ();
           usersInGameLobby.durakGameOption = gameLobbyWithAccount->gameOption;
           ranges::transform (gameLobbyWithAccount->accountNames (), ranges::back_inserter (usersInGameLobby.users), [] (auto const &accountName) { return shared_class::UserInGameLobby{ accountName }; });
-          user->msgQueue.push_back (objectToStringWithObjectName (usersInGameLobby));
+          user->sendMessageToUser (objectToStringWithObjectName (usersInGameLobby));
           return;
         }
       else
@@ -730,7 +730,7 @@ relogTo (std::string const &objectAsString, std::shared_ptr<User> user, std::lis
     }
   else if (relogToObject.wantsToRelog)
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::RelogToError{ "trying to reconnect into game lobby but game lobby does not exist anymore" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::RelogToError{ "trying to reconnect into game lobby but game lobby does not exist anymore" }));
       return;
     }
   return;
@@ -760,11 +760,11 @@ leaveGame (std::shared_ptr<User> user, std::list<Game> &games)
   if (auto game = ranges::find_if (games, [accountName = user->accountName.value ()] (Game const &_game) { return ranges::find_if (_game.users, [&accountName] (std::shared_ptr<User> const &user) { return user->accountName.value () == accountName; }) != _game.users.end (); }); game != games.end ())
     {
       game->removeUser (user);
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveGameSuccess{}));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveGameSuccess{}));
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveGameError{ "Could not find a game for Account Name: " + user->accountName.value () }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveGameError{ "Could not find a game for Account Name: " + user->accountName.value () }));
     }
 }
 auto constexpr ALLOWED_DIFFERENCE_FOR_RANKED_GAME_MATCHMAKING = size_t{ 100 };
@@ -820,11 +820,11 @@ joinMatchMakingQueue (std::shared_ptr<User> user, std::list<GameLobby> &gameLobb
         {
           if (auto error = gameLobbyToAddUser->tryToAddUser (user))
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinGameLobbyError{ user->accountName.value (), error.value () }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinGameLobbyError{ user->accountName.value (), error.value () }));
             }
           else
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinMatchMakingQueueSuccess{}));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinMatchMakingQueueSuccess{}));
               if (gameLobbyToAddUser->_users.size () == gameLobbyToAddUser->maxUserCount ())
                 {
                   askUsersToJoinGame (gameLobbyToAddUser, gameLobbies, io_context);
@@ -837,15 +837,15 @@ joinMatchMakingQueue (std::shared_ptr<User> user, std::list<GameLobby> &gameLobb
           gameLobby.lobbyAdminType = lobbyType;
           if (auto error = gameLobby.tryToAddUser (user))
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinGameLobbyError{ user->accountName.value (), error.value () }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinGameLobbyError{ user->accountName.value (), error.value () }));
             }
           gameLobbies.emplace_back (gameLobby);
-          user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinMatchMakingQueueSuccess{}));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinMatchMakingQueueSuccess{}));
         }
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::JoinMatchMakingQueueError{ "User is allready in gamelobby" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::JoinMatchMakingQueueError{ "User is allready in gamelobby" }));
     }
 }
 
@@ -871,7 +871,7 @@ wantsToJoinGame (std::string const &objectAsString, std::shared_ptr<User> user, 
             }
           else
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::WantsToJoinGameError{ "You already accepted to join the game" }));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::WantsToJoinGameError{ "You already accepted to join the game" }));
             }
         }
       else
@@ -879,7 +879,7 @@ wantsToJoinGame (std::string const &objectAsString, std::shared_ptr<User> user, 
           gameLobby->cancelTimer ();
           if (gameLobby->lobbyAdminType != GameLobby::LobbyType::FirstUserInLobbyUsers)
             {
-              user->msgQueue.push_back (objectToStringWithObjectName (shared_class::GameStartCanceledRemovedFromQueue{}));
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::GameStartCanceledRemovedFromQueue{}));
               gameLobby->removeUser (user);
               if (gameLobby->_users.empty ())
                 {
@@ -890,7 +890,7 @@ wantsToJoinGame (std::string const &objectAsString, std::shared_ptr<User> user, 
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::WantsToJoinGameError{ "No game to join" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::WantsToJoinGameError{ "No game to join" }));
     }
 }
 
@@ -904,7 +904,7 @@ leaveMatchMakingQueue (std::shared_ptr<User> user, std::list<GameLobby> &gameLob
                                         });
       gameLobby != gameLobbies.end ())
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveQuickGameQueueSuccess{}));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveQuickGameQueueSuccess{}));
       gameLobby->removeUser (user);
       gameLobby->cancelTimer ();
       if (gameLobby->_users.empty ())
@@ -914,7 +914,7 @@ leaveMatchMakingQueue (std::shared_ptr<User> user, std::list<GameLobby> &gameLob
     }
   else
     {
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LeaveQuickGameQueueError{ "User is not in queue" }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LeaveQuickGameQueueError{ "User is not in queue" }));
     }
 }
 
@@ -924,7 +924,7 @@ loginAsGuest (std::shared_ptr<User> user)
   if (not user->accountName)
     {
       user->accountName = to_string (boost::uuids::random_generator () ());
-      user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LoginAsGuestSuccess{ user->accountName.value () }));
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::LoginAsGuestSuccess{ user->accountName.value () }));
     }
 }
 
@@ -966,5 +966,5 @@ logoutAccount (std::shared_ptr<User> user, std::list<GameLobby> &gameLobbies, st
   user->communicationChannels.clear ();
   user->ignoreLogin = false;
   user->ignoreCreateAccount = false;
-  user->msgQueue.push_back (objectToStringWithObjectName (shared_class::LogoutAccountSuccess{}));
+  user->sendMessageToUser (objectToStringWithObjectName (shared_class::LogoutAccountSuccess{}));
 }

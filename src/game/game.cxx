@@ -26,7 +26,7 @@ updateAccountsOnDatabaseAndSendDataToClient (std::vector<database::Account> cons
       confu_soci::upsertStruct (sql, accountsBeforeUpdate.at (i));
       if (auto user = ranges::find_if (users, [accountName = accountsBeforeUpdate.at (i).accountName] (std::shared_ptr<User> user) { return user->accountName.value () == accountName; }); user != users.end ())
         {
-          user->get ()->msgQueue.push_back (objectToStringWithObjectName (shared_class::RatingChanged{ accountsAfterUpdate.at (i).rating, accountsBeforeUpdate.at (i).rating }));
+          user->get ()->sendMessageToUser (objectToStringWithObjectName (shared_class::RatingChanged{ accountsAfterUpdate.at (i).rating, accountsBeforeUpdate.at (i).rating }));
         }
     }
 }

@@ -1,10 +1,3 @@
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fcoroutines")
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g -fuse-ld=lld -fcoroutines")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++20 -stdlib=libc++")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++20 -stdlib=libc++ -lc++abi")
-
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fcoroutines -v")
 cmake_minimum_required(VERSION 3.17)
 project(project VERSION 1.0.0
   DESCRIPTION project

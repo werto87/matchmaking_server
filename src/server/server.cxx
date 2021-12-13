@@ -29,7 +29,9 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <cstddef>
+#ifdef BOOST_ASIO_HAS_CLANG_LIBCXX
 #include <experimental/coroutine>
+#endif
 #include <iostream>
 #include <memory>
 #include <openssl/ssl.h>

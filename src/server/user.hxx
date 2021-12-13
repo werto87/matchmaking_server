@@ -2,6 +2,7 @@
 #define F85705C8_6F01_4F50_98CA_5636F5F5E1C1
 
 #include <boost/asio.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/beast.hpp>

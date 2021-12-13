@@ -40,8 +40,6 @@
 #include <tuple>
 #include <type_traits>
 
-namespace net = boost::asio;
-namespace beast = boost::beast;
 using namespace boost::beast;
 using namespace boost::asio;
 namespace beast = boost::beast;   // from <boost/beast.hpp>

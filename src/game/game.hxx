@@ -14,8 +14,8 @@ class Game
 public:
   Game (std::vector<std::shared_ptr<User>> const &users, GameLobby::LobbyType lobbyType, std::function<void ()> gameOver) : users{ users }, lobbyType{ lobbyType }, gameOver{ gameOver } {}
 
-  void relogUser (std::shared_ptr<User>);
-  void removeUser (std::shared_ptr<User>);
+  void relogUser (std::shared_ptr<User> const &user);
+  void removeUser (std::shared_ptr<User> const &user);
   std::vector<std::shared_ptr<User>> getWinners () const;
   void gameOverChangeRating ();
 

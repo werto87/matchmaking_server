@@ -1,11 +1,13 @@
 #include "src/game/game.hxx"
 #include "pipes/pipes.hpp"
-void Game::relogUser (std::shared_ptr<User>)
+void
+Game::relogUser (std::shared_ptr<User> const &)
 {
   // TODO-TEMPLATE add logic here
 }
 
-void Game::removeUser (std::shared_ptr<User>)
+void
+Game::removeUser (std::shared_ptr<User> const &)
 {
   // TODO-TEMPLATE add logic here
 }

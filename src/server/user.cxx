@@ -49,5 +49,5 @@ void
 User::sendMessageToUser (std::string const &message)
 {
   msgQueue.push_back (message);
-  timer->cancel ();
+  if (timer) timer->cancel ();
 }

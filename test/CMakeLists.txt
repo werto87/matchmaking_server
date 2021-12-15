@@ -19,8 +19,3 @@ target_include_directories(${TEST_TARGET_NAME} PRIVATE
 add_test(NAME ${TEST_TARGET_NAME}
     COMMAND ${TEST_TARGET_NAME} -r junit
 ) 
-
-    
-                  
-
- 

@@ -19,7 +19,7 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(TARGET_NAME_LIB project_lib)
-add_library(${TARGET_NAME_LIB} STATIC)
+add_library(${TARGET_NAME_LIB} OBJECT)
 add_subdirectory(src) 
 target_include_directories(${TARGET_NAME_LIB} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(${TARGET_NAME_LIB} PUBLIC
@@ -35,6 +35,7 @@ ${PROJECT_OPTIONS}
   CONAN_PKG::libsodium
   CONAN_PKG::certify
   CONAN_PKG::pipes
+  CONAN_PKG::corrade
 )
 target_compile_definitions(${TARGET_NAME_LIB} PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")
 target_compile_definitions(${TARGET_NAME_LIB} PUBLIC _LIBCPP_ENABLE_CXX20_REMOVED_TYPE_TRAITS)

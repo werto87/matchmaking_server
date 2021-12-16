@@ -21,9 +21,9 @@
 class Server
 {
 public:
-  Server (boost::asio::io_context &io_context, boost::asio::thread_pool &pool, boost::asio::ip::tcp::endpoint const &endpoint);
+  Server (boost::asio::io_context &io_context, boost::asio::thread_pool &pool);
 
-  boost::asio::awaitable<void> listener ();
+  boost::asio::awaitable<void> listener (boost::asio::ip::tcp::endpoint const &endpoint, std::filesystem::path const &pathToSecrets);
 
 private:
   void removeUser (std::list<std::shared_ptr<User>>::iterator user);
@@ -32,7 +32,6 @@ private:
 
   boost::asio::io_context &_io_context;
   boost::asio::thread_pool &_pool;
-  boost::asio::ip::tcp::endpoint _endpoint{};
   std::list<std::shared_ptr<User>> users{};
   std::list<GameLobby> gameLobbies{};
   std::list<Game> games{};

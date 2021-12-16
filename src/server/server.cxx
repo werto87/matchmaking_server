@@ -29,6 +29,7 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <cstddef>
+#include <filesystem>
 #ifdef BOOST_ASIO_HAS_CLANG_LIBCXX
 #include <experimental/coroutine>
 #endif
@@ -51,7 +52,7 @@ namespace ssl = boost::asio::ssl; // from <boost/asio/ssl.hpp>
 using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
 using tcp_acceptor = use_awaitable_t<>::as_default_on_t<tcp::acceptor>;
 
-Server::Server (boost::asio::io_context &io_context, boost::asio::thread_pool &pool, boost::asio::ip::tcp::endpoint const &endpoint) : _io_context{ io_context }, _pool{ pool }, _endpoint{ endpoint } {}
+Server::Server (boost::asio::io_context &io_context, boost::asio::thread_pool &pool) : _io_context{ io_context }, _pool{ pool } {}
 
 awaitable<std::string>
 Server::my_read (SSLWebsocket &ws_)
@@ -104,47 +105,40 @@ Server::removeUser (std::list<std::shared_ptr<User>>::iterator user)
 }
 
 awaitable<void>
-Server::listener ()
+Server::listener (boost::asio::ip::tcp::endpoint const &endpoint, std::filesystem::path const &pathToSecrets)
 {
   auto executor = co_await this_coro::executor;
-  tcp_acceptor acceptor (executor, _endpoint);
+  tcp_acceptor acceptor (executor, endpoint);
   net::ssl::context ctx (net::ssl::context::tls_server);
   ctx.set_verify_mode (ssl::context::verify_peer);
   ctx.set_default_verify_paths ();
 
-#ifdef DEBUG
-  // TODO-TEMPLATE set paths for cert
-  auto const pathToChainFile = std::string{ "PATH_TO_fullchain.pem" };
-  auto const pathToPrivateFile = std::string{ "PATH_TO_privkey.pem" };
-  auto const pathToTmpDhFile = std::string{ "PATH_TO_dh2048.pem" };
-#else
-  auto const pathToChainFile = std::string{ "/secrets/fullchain.pem" };
-  auto const pathToPrivateFile = std::string{ "/secrets/privkey.pem" };
-  auto const pathToTmpDhFile = std::string{ "/secrets/dh2048.pem" };
-#endif
   try
     {
-      ctx.use_certificate_chain_file (pathToChainFile);
+      ctx.use_certificate_chain_file (pathToSecrets / "fullchain.pem");
     }
   catch (std::exception &e)
     {
-      std::cout << "load fullchain: " << pathToChainFile << " exception : " << e.what () << std::endl;
+      std::cout << "load fullchain: " << pathToSecrets / "fullchain.pem"
+                << " exception : " << e.what () << std::endl;
     }
   try
     {
-      ctx.use_private_key_file (pathToPrivateFile, boost::asio::ssl::context::pem);
+      ctx.use_private_key_file (pathToSecrets / "privkey.pem", boost::asio::ssl::context::pem);
     }
   catch (std::exception &e)
     {
-      std::cout << "load privkey: " << pathToPrivateFile << " exception : " << e.what () << std::endl;
+      std::cout << "load privkey: " << pathToSecrets / "privkey.pem"
+                << " exception : " << e.what () << std::endl;
     }
   try
     {
-      ctx.use_tmp_dh_file (pathToTmpDhFile);
+      ctx.use_tmp_dh_file (pathToSecrets / "dh2048.pem");
     }
   catch (std::exception &e)
     {
-      std::cout << "load dh2048: " << pathToTmpDhFile << " exception : " << e.what () << std::endl;
+      std::cout << "load dh2048: " << pathToSecrets / "dh2048.pem"
+                << " exception : " << e.what () << std::endl;
     }
 
   boost::certify::enable_native_https_server_verification (ctx);

@@ -28,7 +28,7 @@ main (int argc, char *argv[])
     {
       if (sodium_init () < 0)
         {
-          std::cout << "sodium_init => 0" << std::endl;
+          std::cout << "sodium_init <= 0" << std::endl;
           std::terminate ();
           /* panic! the library couldn't be initialized, it is not safe to use */
         }

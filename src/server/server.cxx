@@ -114,9 +114,9 @@ Server::listener ()
 
 #ifdef DEBUG
   // TODO-TEMPLATE set paths for cert
-  auto const pathToChainFile = std::string{ "/home/walde/certificate/otherTestCert/fullchain.pem" };
-  auto const pathToPrivateFile = std::string{ "/home/walde/certificate/otherTestCert/privkey.pem" };
-  auto const pathToTmpDhFile = std::string{ "/home/walde/certificate/otherTestCert/dh2048.pem" };
+  auto const pathToChainFile = std::string{ "PATH_TO_fullchain.pem" };
+  auto const pathToPrivateFile = std::string{ "PATH_TO_privkey.pem" };
+  auto const pathToTmpDhFile = std::string{ "PATH_TO_dh2048.pem" };
 #else
   auto const pathToChainFile = std::string{ "/secrets/fullchain.pem" };
   auto const pathToPrivateFile = std::string{ "/secrets/privkey.pem" };

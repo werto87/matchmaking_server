@@ -23,6 +23,7 @@ main (int argc, char *argv[])
     .addNamedArgument('s', "pathToSecrets").setHelp("pathToSecrets", "path to folder with fullchain.pem, privkey.pem and dh2048.pem")
     .setGlobalHelp("A brief description")
     .parse(argc, argv);
+  // clang-format on
   try
     {
       if (sodium_init () < 0)
@@ -43,9 +44,13 @@ main (int argc, char *argv[])
       signal_set signals (io_context, SIGINT, SIGTERM);
       signals.async_wait ([&] (auto, auto) { io_context.stop (); });
       thread_pool pool{ 2 };
-      auto server = Server{ io_context, pool};
+      auto server = Server{ io_context, pool };
       co_spawn (
-          io_context, [&server,&args] { return server.listener ({ ip::tcp::v4 (), boost::lexical_cast<u_int16_t> (args.value ("port")) },args.value ("pathToSecrets") ); }, detached);
+          io_context,
+          [&server, &args] {
+            return server.listener ({ ip::tcp::v4 (), boost::lexical_cast<u_int16_t> (args.value ("port")) }, args.value ("pathToSecrets"));
+          },
+          detached);
       io_context.run ();
     }
   catch (std::exception &e)

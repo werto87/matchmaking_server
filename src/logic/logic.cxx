@@ -367,7 +367,7 @@ leaveChannel (std::string const &objectAsString, std::shared_ptr<User> user)
 std::optional<shared_class::GameOptionError>
 errorInGameOption (shared_class::GameOption const &)
 {
-  // check Game option
+  // TODO-TEMPLATE check Game option+
   return std::nullopt;
 }
 

@@ -55,12 +55,6 @@
 #include <variant>
 #include <vector>
 
-template <class... Ts> struct overloaded : Ts...
-{
-  using Ts::operator()...;
-};
-template <class... Ts> overloaded (Ts...) -> overloaded<Ts...>;
-
 boost::asio::awaitable<void>
 handleMessage (std::string const &msg, boost::asio::io_context &io_context, boost::asio::thread_pool &pool, std::list<std::shared_ptr<User>> &users, std::shared_ptr<User> user, std::list<GameLobby> &gameLobbies, std::list<Game> &games)
 {

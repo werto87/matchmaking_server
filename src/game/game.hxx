@@ -21,7 +21,7 @@ public:
 
   std::vector<std::shared_ptr<User>> users{};
   GameLobby::LobbyType lobbyType{};
-  std::function<void ()> gameOver{}; // call this inside your game logic if the game is over to remove the game from the games list
+  std::function<void ()> gameOver{}; // TODO-TEMPLATE call this inside your game logic if the game is over to remove the game from the games list
 };
 
 #endif /* BBA7000A_25AB_49B5_99AD_E99C70321D4E */

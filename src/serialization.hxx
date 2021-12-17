@@ -98,5 +98,34 @@ BOOST_FUSION_DEFINE_STRUCT ((shared_class), LeaveQuickGameQueueError, (std::stri
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), LoginAsGuest, )
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), LoginAsGuestSuccess, (std::string, accountName))
 BOOST_FUSION_DEFINE_STRUCT ((shared_class), RatingChanged, (size_t, oldRating) (size_t, newRating))
+BOOST_FUSION_DEFINE_STRUCT ((shared_class), UnhandledMessageError, (std::string, msg) (std::string, error))
+
+// clang-format off
+namespace shared_class{
+    // TODO-TEMPLATE add new type to handle in server and client here
+static boost::hana::tuple<
+JoinChannel,
+CreateAccount,
+LoginAccount,
+BroadCastMessage,
+LeaveChannel,
+LogoutAccount,
+CreateGameLobby,
+JoinGameLobby,
+SetMaxUserSizeInCreateGameLobby,
+GameOption,
+LeaveGame,
+LeaveGameLobby,
+RelogTo,
+CreateAccountCancel,
+LoginAccountCancel,
+CreateGame,
+WantsToJoinGame,
+LeaveQuickGameQueue,
+LoginAsGuest,
+JoinMatchMakingQueue
+  >  const sharedClasses{};
+}
+// clang-format on
 
 #endif /* C02CDB99_AA83_45B0_83E7_8C8BC254A8A2 */

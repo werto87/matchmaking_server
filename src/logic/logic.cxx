@@ -2,6 +2,7 @@
 #include "src/database/database.hxx"
 #include "src/game/rating.hxx"
 #include "src/pw_hash/passwordHash.hxx"
+#include "src/serialization.hxx"
 #include "src/server/gameLobby.hxx"
 #include "src/util.hxx"
 #include <algorithm>
@@ -21,13 +22,16 @@
 #include <boost/optional/optional_io.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/system/detail/error_code.hpp>
 #include <boost/type_index.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <cmath>
 #include <confu_json/confu_json.hxx>
+#include <confu_json/to_json.hxx>
 #include <crypt.h>
 #include <cstddef>
 #include <cstdlib>
+#include <exception>
 #include <fmt/core.h>
 #include <iostream>
 #include <iterator>
@@ -45,6 +49,7 @@
 #include <range/v3/range.hpp>
 #include <range/v3/range_fwd.hpp>
 #include <range/v3/view/filter.hpp>
+#include <set>
 #include <sodium.h>
 #include <sstream>
 #include <stdexcept>
@@ -54,6 +59,16 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+std::set<std::string>
+getApiTypes ()
+{
+  auto result = std::set<std::string>{};
+  boost::hana::for_each (shared_class::sharedClasses, [&] (const auto &x) { result.insert (confu_json::type_name<typename std::decay<decltype (x)>::type> ()); });
+  return result;
+}
+
+auto const apiTypes = getApiTypes ();
 
 boost::asio::awaitable<void>
 handleMessage (std::string const &msg, boost::asio::io_context &io_context, boost::asio::thread_pool &pool, std::list<std::shared_ptr<User>> &users, std::shared_ptr<User> user, std::list<GameLobby> &gameLobbies, std::list<Game> &games)
@@ -65,112 +80,112 @@ handleMessage (std::string const &msg, boost::asio::io_context &io_context, boos
       // TODO-TEMPLATE to add a new type to handle here put it in sharedClasses it is in src/serialization.hxx
       auto const &typeToSearch = splitMesssage.at (0);
       auto const &objectAsString = splitMesssage.at (1);
-      if (typeToSearch == "CreateAccount")
+      if (not apiTypes.contains (typeToSearch))
         {
-          co_await createAccountAndLogin (objectAsString, io_context, user, pool, gameLobbies, games);
-          user->ignoreCreateAccount = false;
-          user->ignoreLogin = false;
-        }
-      else if (typeToSearch == "LoginAccount")
-        {
-          co_await loginAccount (objectAsString, io_context, users, user, pool, gameLobbies, games);
-          user->ignoreCreateAccount = false;
-          user->ignoreLogin = false;
-        }
-      else if (typeToSearch == "LoginAccountCancel")
-        {
-          loginAccountCancel (user);
-        }
-      else if (typeToSearch == "CreateAccountCancel")
-        {
-          createAccountCancel (user);
-        }
-      else if (typeToSearch == "LoginAsGuest")
-        {
-          loginAsGuest (user);
-        }
-      else if (user->accountName)
-        {
-          if (typeToSearch == "BroadCastMessage")
-            {
-              broadCastMessage (objectAsString, users, *user);
-            }
-          else if (typeToSearch == "JoinChannel")
-            {
-              joinChannel (objectAsString, user);
-            }
-          else if (typeToSearch == "LeaveChannel")
-            {
-              leaveChannel (objectAsString, user);
-            }
-          else if (typeToSearch == "LogoutAccount")
-            {
-              logoutAccount (user, gameLobbies, games);
-            }
-          else if (typeToSearch == "CreateGameLobby")
-            {
-              createGameLobby (objectAsString, user, gameLobbies);
-            }
-          else if (typeToSearch == "JoinGameLobby")
-            {
-              joinGameLobby (objectAsString, user, gameLobbies);
-            }
-          else if (typeToSearch == "SetMaxUserSizeInCreateGameLobby")
-            {
-              setMaxUserSizeInCreateGameLobby (objectAsString, user, gameLobbies);
-            }
-          else if (typeToSearch == "GameOption")
-            {
-              setGameOption (objectAsString, user, gameLobbies);
-            }
-          else if (typeToSearch == "LeaveGameLobby")
-            {
-              leaveGameLobby (user, gameLobbies);
-            }
-          else if (typeToSearch == "RelogTo")
-            {
-              relogTo (objectAsString, user, gameLobbies, games);
-            }
-          else if (typeToSearch == "CreateGame")
-            {
-              createGame (user, gameLobbies, io_context);
-            }
-          else if (typeToSearch == "LeaveGame")
-            {
-              leaveGame (user, games);
-            }
-          else if (typeToSearch == "JoinMatchMakingQueue")
-            {
-              joinMatchMakingQueue (user, gameLobbies, io_context, (stringToObject<shared_class::JoinMatchMakingQueue> (objectAsString).isRanked) ? GameLobby::LobbyType::MatchMakingSystemRanked : GameLobby::LobbyType::MatchMakingSystemUnranked);
-            }
-          else if (typeToSearch == "WantsToJoinGame")
-            {
-              wantsToJoinGame (objectAsString, user, gameLobbies, games);
-            }
-          else if (typeToSearch == "LeaveQuickGameQueue")
-            {
-              leaveMatchMakingQueue (user, gameLobbies);
-            }
-          else if (typeToSearch == "JoinRankedGameQueue")
-            {
-              joinMatchMakingQueue (user, gameLobbies, io_context, GameLobby::LobbyType::MatchMakingSystemRanked);
-            }
-          else
-            {
-              std::cout << "UnhandledMessage|{\"message\": \"" << msg << "\"}" << std::endl;
-              user->sendMessageToUser ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
-            }
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::UnhandledMessageError{ msg, "Message type is not handled by server api" }));
         }
       else
         {
-          std::cout << "UnhandledMessage|{\"message\": \"" << msg << "\"}" << std::endl;
-          user->sendMessageToUser ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
+          if (typeToSearch == "CreateAccount")
+            {
+              co_await createAccountAndLogin (objectAsString, io_context, user, pool, gameLobbies, games);
+              user->ignoreCreateAccount = false;
+              user->ignoreLogin = false;
+            }
+          else if (typeToSearch == "LoginAccount")
+            {
+              co_await loginAccount (objectAsString, io_context, users, user, pool, gameLobbies, games);
+              user->ignoreCreateAccount = false;
+              user->ignoreLogin = false;
+            }
+          else if (typeToSearch == "LoginAccountCancel")
+            {
+              loginAccountCancel (user);
+            }
+          else if (typeToSearch == "CreateAccountCancel")
+            {
+              createAccountCancel (user);
+            }
+          else if (typeToSearch == "LoginAsGuest")
+            {
+              loginAsGuest (user);
+            }
+          else if (user->accountName)
+            {
+              if (typeToSearch == "BroadCastMessage")
+                {
+                  broadCastMessage (objectAsString, users, *user);
+                }
+              else if (typeToSearch == "JoinChannel")
+                {
+                  joinChannel (objectAsString, user);
+                }
+              else if (typeToSearch == "LeaveChannel")
+                {
+                  leaveChannel (objectAsString, user);
+                }
+              else if (typeToSearch == "LogoutAccount")
+                {
+                  logoutAccount (user, gameLobbies, games);
+                }
+              else if (typeToSearch == "CreateGameLobby")
+                {
+                  createGameLobby (objectAsString, user, gameLobbies);
+                }
+              else if (typeToSearch == "JoinGameLobby")
+                {
+                  joinGameLobby (objectAsString, user, gameLobbies);
+                }
+              else if (typeToSearch == "SetMaxUserSizeInCreateGameLobby")
+                {
+                  setMaxUserSizeInCreateGameLobby (objectAsString, user, gameLobbies);
+                }
+              else if (typeToSearch == "GameOption")
+                {
+                  setGameOption (objectAsString, user, gameLobbies);
+                }
+              else if (typeToSearch == "LeaveGameLobby")
+                {
+                  leaveGameLobby (user, gameLobbies);
+                }
+              else if (typeToSearch == "RelogTo")
+                {
+                  relogTo (objectAsString, user, gameLobbies, games);
+                }
+              else if (typeToSearch == "CreateGame")
+                {
+                  createGame (user, gameLobbies, io_context);
+                }
+              else if (typeToSearch == "LeaveGame")
+                {
+                  leaveGame (user, games);
+                }
+              else if (typeToSearch == "JoinMatchMakingQueue")
+                {
+                  joinMatchMakingQueue (user, gameLobbies, io_context, (stringToObject<shared_class::JoinMatchMakingQueue> (objectAsString).isRanked) ? GameLobby::LobbyType::MatchMakingSystemRanked : GameLobby::LobbyType::MatchMakingSystemUnranked);
+                }
+              else if (typeToSearch == "WantsToJoinGame")
+                {
+                  wantsToJoinGame (objectAsString, user, gameLobbies, games);
+                }
+              else if (typeToSearch == "LeaveQuickGameQueue")
+                {
+                  leaveMatchMakingQueue (user, gameLobbies);
+                }
+              else if (typeToSearch == "JoinRankedGameQueue")
+                {
+                  joinMatchMakingQueue (user, gameLobbies, io_context, GameLobby::LobbyType::MatchMakingSystemRanked);
+                }
+            }
+          else
+            {
+              user->sendMessageToUser (objectToStringWithObjectName (shared_class::UnhandledMessageError{ msg, "Not logged in but login is needed" }));
+            }
         }
     }
   else
     {
-      std::cout << "UnhandledMessage|{\"message\": \"" << msg << "\"}" << std::endl;
-      user->sendMessageToUser ("UnhandledMessage|{\"message\": \"" + msg + "\"}");
+      user->sendMessageToUser (objectToStringWithObjectName (shared_class::UnhandledMessageError{ msg, "Message syntax error. Syntax is: ApiFunctionName|JsonObject" }));
     }
   co_return;
 }
@@ -477,7 +492,7 @@ createGameLobby (std::string const &objectAsString, std::shared_ptr<User> user, 
                                                     });
           gameLobbyWithUser != gameLobbies.end ())
         {
-          user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateGameLobbyError{ { "account has already a game lobby with the name: " + gameLobbyWithUser->name.value () } }));
+          user->sendMessageToUser (objectToStringWithObjectName (shared_class::CreateGameLobbyError{ { "account has already a game lobby with the name: " + gameLobbyWithUser->name.value_or ("Quick Game Lobby") } }));
           return;
         }
       else

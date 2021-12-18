@@ -9,7 +9,6 @@ magic_enum/0.7.2
 catch2/2.13.7
 pipes/1.0.0
 corrade/2020.06
-ms-gsl/3.1.0
 [generators]
 cmake
 [options]

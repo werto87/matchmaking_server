@@ -36,10 +36,11 @@ ${PROJECT_OPTIONS}
   CONAN_PKG::certify
   CONAN_PKG::pipes
   CONAN_PKG::corrade
-  CONAN_PKG::ms-gsl
 )
 target_compile_definitions(${TARGET_NAME_LIB} PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")
 target_compile_definitions(${TARGET_NAME_LIB} PUBLIC _LIBCPP_ENABLE_CXX20_REMOVED_TYPE_TRAITS)
+# target_compile_definitions(${TARGET_NAME_LIB} PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+
 # create executable
 OPTION(BUILD_TESTS "enable tests" OFF)
 IF(BUILD_TESTS)

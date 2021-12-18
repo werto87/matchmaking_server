@@ -126,5 +126,3 @@ TEST_CASE ("handleMessage logged in and create game lobby", "[every api function
   database::createEmptyDatabase ();
   database::createTables ();
 }
-
-// TODO think of some use cases like log in queue for quick game. log in with other player queue for quick game accept decline and so on

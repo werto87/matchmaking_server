@@ -36,6 +36,7 @@ ${PROJECT_OPTIONS}
   CONAN_PKG::certify
   CONAN_PKG::pipes
   CONAN_PKG::corrade
+  CONAN_PKG::ms-gsl
 )
 target_compile_definitions(${TARGET_NAME_LIB} PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")
 target_compile_definitions(${TARGET_NAME_LIB} PUBLIC _LIBCPP_ENABLE_CXX20_REMOVED_TYPE_TRAITS)
